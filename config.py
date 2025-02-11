@@ -1,0 +1,10 @@
+# 百度API配置
+BAIDU_APP_ID = "您的百度APP_ID"
+BAIDU_API_KEY = "您的百度API_KEY"
+BAIDU_SECRET_KEY = "您的百度SECRET_KEY"
+
+# 音频配置
+RATE = 16000
+CHUNK = 1024
+CHANNELS = 1
+FORMAT = 'int16' 
