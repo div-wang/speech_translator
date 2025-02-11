@@ -1,6 +1,7 @@
 from audio_recorder import AudioRecorder
 from speech_recognition import SpeechRecognizer
 from translator import BaiduTranslator
+from tts import BaiduTTS
 import config
 import time
 import numpy as np
@@ -12,6 +13,7 @@ def main():
                                  config.BAIDU_API_KEY, 
                                  config.BAIDU_SECRET_KEY)
     translator = BaiduTranslator(config.BAIDU_APP_ID, config.BAIDU_SECRET_KEY)
+    tts = BaiduTTS(config.BAIDU_APP_ID, config.BAIDU_API_KEY, config.BAIDU_SECRET_KEY)
 
     print("开始录音...")
     recorder.start_recording()
@@ -30,9 +32,8 @@ def main():
                     japanese_text = translator.translate(text)
                     if japanese_text:
                         print(f"日语翻译: {japanese_text}")
-                        
-                        # TODO: 这里添加日语TTS的实现
-                        # 建议使用开源的VITS模型或其他TTS服务
+                        # 使用TTS播放翻译后的文本
+                        tts.speak(japanese_text)
                         
             time.sleep(0.1)  # 短暂休眠以降低CPU使用率
 
