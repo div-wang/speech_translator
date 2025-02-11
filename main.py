@@ -1,45 +1,54 @@
-from audio_recorder import AudioRecorder
-from speech_recognition import SpeechRecognizer
+import sounddevice as sd
+from speech_recognition import RealtimeSpeechRecognizer
 from translator import BaiduTranslator
 from tts import BaiduTTS
 import config
-import time
 import numpy as np
 
 def main():
-    # 初始化各个模块
-    recorder = AudioRecorder(rate=config.RATE, chunk=config.CHUNK)
-    recognizer = SpeechRecognizer(config.BAIDU_APP_ID, 
-                                 config.BAIDU_API_KEY, 
-                                 config.BAIDU_SECRET_KEY)
+    # 初始化模块
+    recognizer = RealtimeSpeechRecognizer(
+        config.BAIDU_APP_ID,
+        config.BAIDU_API_KEY,
+        config.BAIDU_SECRET_KEY
+    )
     translator = BaiduTranslator(config.BAIDU_APP_ID, config.BAIDU_SECRET_KEY)
     tts = BaiduTTS(config.BAIDU_APP_ID, config.BAIDU_API_KEY, config.BAIDU_SECRET_KEY)
 
-    print("开始录音...")
-    recorder.start_recording()
+    def audio_callback(indata, frames, time, status):
+        """音频回调函数"""
+        if status:
+            print(f"状态: {status}")
+        # 发送音频数据到识别器
+        recognizer.send_audio(indata.copy())
+
+    def on_recognition_result(text):
+        """识别结果回调"""
+        print(f"识别结果: {text}")
+        japanese_text = translator.translate(text)
+        if japanese_text:
+            print(f"日语翻译: {japanese_text}")
+            tts.speak(japanese_text)
+
+    # 启动语音识别
+    recognizer.start(callback=on_recognition_result)
 
     try:
-        while True:
-            # 获取音频数据
-            audio_data = recorder.get_audio_data()
-            if audio_data is not None:
-                # 语音识别
-                text = recognizer.recognize(audio_data)
-                if text:
-                    print(f"识别结果: {text}")
-                    
-                    # 翻译成日语
-                    japanese_text = translator.translate(text)
-                    if japanese_text:
-                        print(f"日语翻译: {japanese_text}")
-                        # 使用TTS播放翻译后的文本
-                        tts.speak(japanese_text)
-                        
-            time.sleep(0.1)  # 短暂休眠以降低CPU使用率
-
+        # 开启音频流
+        with sd.InputStream(
+            channels=1,
+            dtype=np.int16,
+            samplerate=16000,
+            blocksize=1024,
+            callback=audio_callback
+        ):
+            print("开始录音，按Ctrl+C停止...")
+            while True:
+                sd.sleep(1000)
+                
     except KeyboardInterrupt:
         print("\n停止录音...")
-        recorder.stop_recording()
+        recognizer.stop()
 
 if __name__ == "__main__":
     main() 
