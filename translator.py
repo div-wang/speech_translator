@@ -6,36 +6,16 @@ LastEditTime: 2025-02-11 21:49:01
 Description: 
 Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
 '''
-import requests
-import json
-import hashlib
-import random
-import time
+import translators as ts
 
-class BaiduTranslator:
-    def __init__(self, app_id, secret_key):
-        self.app_id = app_id
-        self.secret_key = secret_key
-        self.url = "http://api.fanyi.baidu.com/api/trans/vip/translate"
+class Translator:
+    def __init__(self):
+        pass
 
-    def translate(self, text, from_lang='auto', to_lang='jp'):
-        salt = str(random.randint(32768, 65536))
-        sign = self.app_id + text + salt + self.secret_key
-        sign = hashlib.md5(sign.encode()).hexdigest()
-
-        params = {
-            'appid': self.app_id,
-            'q': text,
-            'from': from_lang,
-            'to': to_lang,
-            'salt': salt,
-            'sign': sign
-        }
-
+    def translate(self, text, from_lang='zh', to_lang='en'):
+        """翻译文本"""
         try:
-            response = requests.get(self.url, params=params)
-            result = response.json()
-            return result['trans_result'][0]['dst']
+            return ts.bing(text, from_language=from_lang, to_language=to_lang)
         except Exception as e:
             print(f"翻译错误: {e}")
             return None 

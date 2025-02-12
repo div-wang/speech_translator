@@ -1,39 +1,20 @@
-from aip import AipSpeech
-import wave
-import pygame.mixer
-import io
-import time
+import win32com.client
 
-class BaiduTTS:
-    def __init__(self, app_id, api_key, secret_key):
-        self.client = AipSpeech(app_id, api_key, secret_key)
-        pygame.mixer.init(frequency=16000)
+class TextToSpeech:
+    def __init__(self):
+        self.speaker = win32com.client.Dispatch("SAPI.SpVoice")
+        # 获取所有可用的语音
+        self.voices = self.speaker.GetVoices()
+        
+        # 设置默认语音（可以根据需要选择不同的语音）
+        for voice in self.voices:
+            if 'English' in voice.GetDescription():
+                self.speaker.Voice = voice
+                break
 
     def speak(self, text):
+        """将文本转换为语音"""
         try:
-            # 调用百度TTS API
-            result = self.client.synthesis(text, 'jp', 1, {
-                'spd': 5,  # 语速
-                'pit': 5,  # 音调
-                'vol': 5,  # 音量
-                'per': 0   # 发音人，可以根据需求更改
-            })
-
-            # 检查返回结果是否为音频数据
-            if not isinstance(result, dict):
-                # 将音频数据写入内存文件
-                audio_io = io.BytesIO(result)
-                
-                # 使用pygame播放音频
-                pygame.mixer.music.load(audio_io)
-                pygame.mixer.music.play()
-                
-                # 等待音频播放完成
-                while pygame.mixer.music.get_busy():
-                    time.sleep(0.1)
-                    
-            else:
-                print("TTS转换失败:", result)
-                
+            self.speaker.Speak(text)
         except Exception as e:
-            print(f"TTS错误: {e}") 
+            print(f"语音合成错误: {e}") 
